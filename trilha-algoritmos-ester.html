@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Trilha de Algoritmos — Ester</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#211C4E;
+    --ink-soft:#6B679B;
+    --paper:#F3F3FA;
+    --surface:#FFFFFF;
+    --lime:#CFEF44;
+    --lime-dark:#7A9420;
+    --rose:#E8536B;
+    --line:#DDDCEC;
+    --radius:14px;
+    --font-display:'Space Grotesk','Segoe UI',system-ui,sans-serif;
+    --font-body:'Inter','Segoe UI',system-ui,sans-serif;
+    --font-mono:'JetBrains Mono','Fira Code',Consolas,Monaco,monospace;
+  }
+  *,*::before,*::after{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:var(--font-body);
+    color:var(--ink);
+    background:var(--paper);
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{font-family:var(--font-display);margin:0;line-height:1.18;font-weight:600;}
+  p{margin:0 0 1em;}
+  button{font-family:inherit;}
+  ul{margin:0;padding:0;}
+  button:focus-visible, a:focus-visible{outline:3px solid var(--ink);outline-offset:2px;}
+
+  /* ---------- layout ---------- */
+  .sobreposicao{display:none;position:fixed;inset:0;background:rgba(33,28,78,.45);z-index:49;}
+  .sobreposicao.ativa{display:block;}
+  .topo-mobile{display:none;position:sticky;top:0;z-index:40;background:var(--surface);border-bottom:1px solid var(--line);padding:14px 18px;align-items:center;gap:12px;}
+  .botao-menu{background:none;border:2px solid var(--line);border-radius:8px;width:38px;height:38px;font-size:1.1rem;cursor:pointer;color:var(--ink);flex-shrink:0;}
+  .topo-mobile-titulo{font-family:var(--font-display);font-weight:600;font-size:.98rem;flex:1;}
+  .topo-mobile-progresso{font-family:var(--font-mono);font-size:.75rem;color:var(--ink-soft);}
+
+  #app{display:flex;align-items:flex-start;}
+
+  .trilha-lateral{
+    width:280px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--line);
+    padding:32px 24px;position:sticky;top:0;height:100vh;overflow-y:auto;
+  }
+  .trilha-titulo{font-size:1.05rem;margin-bottom:2px;cursor:pointer;background:none;border:none;padding:0;text-align:left;color:var(--ink);font-family:var(--font-display);font-weight:600;}
+  .trilha-subtitulo{font-size:.82rem;color:var(--ink-soft);margin:0 0 22px;}
+
+  .trilha-lista{list-style:none;margin:0;padding:0;}
+  .trilha-item{position:relative;padding-left:34px;padding-bottom:20px;}
+  .trilha-item::before{content:'';position:absolute;left:11px;top:26px;bottom:-2px;width:2px;background:var(--line);}
+  .trilha-item:last-child::before{display:none;}
+  .trilha-estacao{
+    position:absolute;left:0;top:0;width:23px;height:23px;border-radius:50%;
+    background:var(--surface);border:2px solid var(--line);
+    display:flex;align-items:center;justify-content:center;
+    font-size:.68rem;font-weight:700;color:var(--ink-soft);font-family:var(--font-mono);
+  }
+  .trilha-item.concluido .trilha-estacao{background:var(--lime);border-color:var(--lime-dark);color:var(--ink);}
+  .trilha-item.atual .trilha-estacao{border-color:var(--ink);background:var(--ink);color:var(--paper);}
+  .trilha-link{background:none;border:none;text-align:left;cursor:pointer;font-family:var(--font-body);font-size:.9rem;color:var(--ink-soft);padding:2px 0;width:100%;}
+  .trilha-link:hover{color:var(--ink);}
+  .trilha-item.atual .trilha-link{color:var(--ink);font-weight:600;}
+
+  .progresso-caixa{margin-top:26px;padding-top:20px;border-top:1px solid var(--line);}
+  .progresso-texto{font-size:.78rem;color:var(--ink-soft);margin:0 0 8px;}
+  .progresso-barra-fundo{height:8px;background:var(--paper);border-radius:99px;overflow:hidden;}
+  .progresso-barra-preenchimento{height:100%;background:var(--lime);transition:width .4s ease;}
+
+  .rodape-lateral{margin-top:18px;}
+  .botao-reiniciar{background:none;border:none;color:var(--ink-soft);font-size:.76rem;cursor:pointer;padding:0;text-decoration:underline;}
+  .confirmar-reset{margin-top:8px;padding:10px;background:var(--paper);border-radius:8px;font-size:.76rem;}
+  .confirmar-reset p{margin:0 0 8px;}
+  .confirmar-reset .linha-botoes{display:flex;gap:8px;}
+  .confirmar-reset button{font-size:.76rem;padding:6px 10px;border-radius:6px;border:1px solid var(--line);background:var(--surface);cursor:pointer;}
+  .confirmar-reset button.sim{border-color:var(--rose);color:var(--rose);}
+
+  .conteudo-principal{flex:1;min-width:0;padding:52px 60px 120px;}
+
+  /* ---------- welcome ---------- */
+  .tela-boas-vindas{max-width:640px;}
+  .selo-completo{background:#F3FBDD;border:2px solid var(--lime-dark);border-radius:var(--radius);padding:18px 20px;margin:22px 0;}
+  .selo-completo .feedback-titulo{color:#3F4D0F;}
+  .selo-completo p{color:#3F4D0F;margin:0;}
+
+  /* ---------- lesson header / body ---------- */
+  .rotulo-modulo{font-family:var(--font-mono);font-size:.78rem;color:var(--ink-soft);margin:0 0 10px;}
+  .cabecalho-licao h1{font-size:1.9rem;margin-bottom:10px;}
+  .resumo-licao{font-size:1.02rem;color:var(--ink-soft);max-width:600px;}
+  .medida-leitura{max-width:640px;}
+  .texto-licao{font-size:.98rem;max-width:640px;}
+
+  .dica{background:var(--surface);border:2px solid var(--lime-dark);border-left-width:6px;border-radius:10px;padding:14px 18px;margin:18px 0;max-width:640px;}
+  .dica-rotulo{font-family:var(--font-display);font-weight:600;font-size:.85rem;margin:0 0 4px;color:var(--ink);}
+  .dica p{margin:0;font-size:.92rem;}
+
+  .painel-codigo{background:var(--ink);color:#EDEBFF;border-radius:var(--radius);padding:18px 22px;overflow-x:auto;margin:18px 0;max-width:640px;}
+  .painel-codigo .legenda{font-family:var(--font-mono);font-size:.72rem;color:var(--lime);margin:0 0 10px;opacity:.9;}
+  .painel-codigo pre{margin:0;font-family:var(--font-mono);font-size:.85rem;line-height:1.65;}
+  .tok-kw{color:var(--lime);}
+  .tok-str{color:#FFD48A;}
+
+  .fluxograma{display:flex;flex-direction:column;align-items:center;padding:30px 16px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);margin:20px 0;max-width:640px;}
+  .fc-caixa{padding:10px 20px;font-size:.82rem;font-weight:600;text-align:center;font-family:var(--font-body);}
+  .fc-oval{background:var(--ink);color:var(--paper);border-radius:999px;}
+  .fc-entrada{background:var(--paper);border:2px solid var(--line);border-radius:6px;}
+  .fc-processo{background:var(--surface);border:2px solid var(--ink);border-radius:6px;}
+  .fc-losango{width:160px;height:160px;background:var(--lime);display:flex;align-items:center;justify-content:center;transform:rotate(45deg);margin:6px 0;}
+  .fc-losango span{transform:rotate(-45deg);font-size:.76rem;font-weight:700;text-align:center;width:118px;color:var(--ink);font-family:var(--font-mono);}
+  .fc-seta{width:2px;height:22px;background:var(--ink-soft);position:relative;}
+  .fc-seta::after{content:'';position:absolute;bottom:-1px;left:50%;transform:translateX(-50%);border:6px solid transparent;border-top-color:var(--ink-soft);}
+  .fc-ramos{display:flex;gap:36px;margin-top:6px;}
+  .fc-ramo{display:flex;flex-direction:column;align-items:center;}
+  .fc-rotulo-ramo{font-size:.72rem;font-weight:700;color:var(--ink-soft);margin:6px 0;font-family:var(--font-mono);}
+
+  /* ---------- exercises ---------- */
+  .titulo-secao-exercicios{margin:40px 0 6px;font-size:1.3rem;}
+  .subtitulo-secao-exercicios{color:var(--ink-soft);font-size:.9rem;margin-bottom:20px;}
+
+  .exercicio{border:2px dashed var(--line);border-radius:var(--radius);padding:22px 24px;margin:18px 0;background:var(--surface);max-width:640px;}
+  .exercicio.resolvido{border-style:solid;border-color:var(--lime-dark);}
+  .exercicio-rotulo{font-family:var(--font-mono);font-size:.72rem;color:var(--ink-soft);margin:0 0 10px;}
+  .exercicio-pergunta{font-weight:600;font-size:.98rem;margin:0 0 14px;}
+  .exercicio .painel-codigo{max-width:none;margin:0 0 16px;}
+
+  .exercicio-opcoes{display:flex;flex-direction:column;gap:10px;}
+  .opcao{display:block;width:100%;text-align:left;padding:12px 16px;border:2px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);font-family:var(--font-body);font-size:.9rem;cursor:pointer;transition:border-color .15s ease,background .15s ease;}
+  .opcao code{font-family:var(--font-mono);font-size:.86rem;background:none;}
+  .opcao:hover:not(:disabled){border-color:var(--ink);}
+  .opcao.correta-marcada{border-color:var(--lime-dark);background:#F3FBDD;}
+  .opcao.incorreta-marcada{border-color:var(--rose);background:#FDECEF;}
+  .opcao:disabled{cursor:default;}
+
+  .feedback{margin-top:14px;padding:14px 16px;border-radius:10px;font-size:.88rem;}
+  .feedback.ok{background:#F3FBDD;color:#3F4D0F;}
+  .feedback.nao{background:#FDECEF;color:#7A2331;}
+  .feedback-titulo{font-weight:700;margin:0 0 4px;font-family:var(--font-display);}
+  .feedback p:last-child{margin:0;}
+
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 14px;min-height:20px;}
+  .chip{padding:8px 14px;border-radius:999px;border:2px solid var(--ink);background:var(--surface);font-size:.83rem;cursor:pointer;font-family:var(--font-body);color:var(--ink);}
+  .chip:hover:not(:disabled){background:var(--paper);}
+  .chips-escolhidos .chip{background:var(--ink);color:var(--paper);cursor:default;display:inline-flex;gap:7px;align-items:center;}
+  .chips-escolhidos .chip .num{font-family:var(--font-mono);font-size:.7rem;opacity:.65;}
+  .rotulo-chips{font-size:.76rem;color:var(--ink-soft);margin:0 0 6px;}
+
+  .exercicio-acoes{display:flex;gap:10px;margin-top:6px;}
+
+  /* ---------- buttons ---------- */
+  .botao{display:inline-flex;align-items:center;gap:8px;font-weight:600;font-size:.88rem;padding:11px 20px;border-radius:999px;border:2px solid var(--ink);background:var(--surface);color:var(--ink);cursor:pointer;transition:transform .15s ease,background .15s ease;}
+  .botao:hover:not(:disabled){transform:translateY(-1px);}
+  .botao.principal{background:var(--ink);color:var(--paper);}
+  .botao.principal:hover:not(:disabled){background:#322A6B;}
+  .botao:disabled{opacity:.45;cursor:default;transform:none;}
+
+  .navegacao-licao{display:flex;justify-content:space-between;gap:14px;margin-top:44px;max-width:640px;flex-wrap:wrap;}
+
+  footer.rodape-app{max-width:640px;margin-top:60px;padding-top:20px;border-top:1px solid var(--line);font-size:.78rem;color:var(--ink-soft);}
+
+  @media (max-width:860px){
+    .topo-mobile{display:flex;}
+    .trilha-lateral{position:fixed;left:0;top:0;bottom:0;transform:translateX(-100%);transition:transform .25s ease;z-index:50;box-shadow:2px 0 24px rgba(0,0,0,.18);}
+    .trilha-lateral.aberta{transform:translateX(0);}
+    .conteudo-principal{padding:30px 20px 90px;}
+    .cabecalho-licao h1{font-size:1.5rem;}
+    .fc-ramos{gap:18px;}
+    .fc-losango{width:130px;height:130px;}
+    .fc-losango span{width:96px;font-size:.68rem;}
+  }
+  @media (min-width:861px){
+    .sobreposicao{display:none !important;}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{transition:none !important;animation:none !important;}
+  }
+</style>
+</head>
+<body>
+<div class="sobreposicao" id="sobreposicao"></div>
+<header class="topo-mobile">
+  <button class="botao-menu" id="botao-menu" aria-label="Abrir trilha de módulos">☰</button>
+  <span class="topo-mobile-titulo">Trilha de Algoritmos</span>
+  <span class="topo-mobile-progresso" id="topo-mobile-progresso"></span>
+</header>
+<div id="app">
+  <aside class="trilha-lateral" id="trilha-lateral"></aside>
+  <main class="conteudo-principal" id="conteudo-principal"></main>
+</div>
+
+<script>
+/* =======================================================
+   ESCAPE / DESTAQUE DE CÓDIGO
+======================================================= */
+function t(texto){
+  if(texto===undefined||texto===null) return '';
+  return String(texto).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');
+}
+function destacarPython(codigoEscapado){
+  const partes = codigoEscapado.split(/("(?:[^"]*)"|'(?:[^']*)')/g);
+  const palavrasChave = /\b(import|input|int|float|str|len|range|print|if|elif|else|for|while|def|return|and|or|not|in|True|False|None)\b/g;
+  return partes.map((parte,i)=>{
+    if(i % 2 === 1){ return '<span class="tok-str">'+parte+'</span>'; }
+    return parte.replace(palavrasChave,'<span class="tok-kw">$1</span>');
+  }).join('');
+}
+
+/* =======================================================
+   DADOS DOS MÓDULOS
+======================================================= */
+const MODULES = [
+{
+  id:'intro', numero:1, titulo:'O que é um algoritmo?',
+  resumo:'A ideia mais simples e mais importante de toda a programação.',
+  conteudo:[
+    {tipo:'texto', texto:'Antes de escrever qualquer código, existe uma ideia simples que sustenta tudo: um algoritmo é uma sequência finita de passos, bem definidos e em ordem, que resolve um problema ou realiza uma tarefa. Só isso — e você já usa algoritmos o tempo todo, sem perceber.'},
+    {tipo:'texto', texto:'Pense na receita de um bolo, no tutorial de como trocar o pneu de uma bicicleta, ou até no jeito que você amarra o cadarço do tênis. Todos são algoritmos: uma lista de passos que, seguidos na ordem certa, levam a um resultado esperado.'},
+    {tipo:'texto', texto:'Para ser considerado um bom algoritmo, essa sequência de passos precisa de três coisas: um início e um fim claros (ele não pode continuar para sempre), passos sem ambiguidade — qualquer pessoa que os siga deve chegar ao mesmo resultado — e uma ordem definida, já que trocar a ordem dos passos pode mudar (ou estragar) o resultado.'},
+    {tipo:'dica', texto:'Repare que nada disso, até agora, envolveu um computador. Algoritmo é uma ideia — programar é o processo de traduzir essa ideia para uma linguagem que o computador entenda, como o Python, que vamos usar no resto da trilha.'}
+  ],
+  exercicios:[
+    {id:'intro-1', tipo:'mcq', pergunta:'Qual das opções abaixo é, de fato, um algoritmo?',
+      opcoes:['Eu gosto muito de macarrão.','Ferver água, adicionar sal, colocar o macarrão, esperar 10 minutos e escorrer.','Macarrão é um prato de origem italiana.','Hoje o almoço estava bom.'],
+      correta:1, explicacao:'Um algoritmo precisa ser uma sequência de passos para realizar uma tarefa. As outras frases são só opiniões ou informações soltas, sem uma sequência de ações.'},
+    {id:'intro-2', tipo:'ordenar', pergunta:'Coloque os passos para fazer um sanduíche na ordem correta:',
+      itens:['Pegar duas fatias de pão','Passar manteiga nas fatias','Colocar o recheio','Juntar as duas fatias'],
+      ordemExibicao:[2,0,3,1],
+      explicacao:'Cada passo depende do anterior ter sido feito: não dá pra colocar o recheio antes de passar a manteiga, nem juntar as fatias antes de ter o recheio. A ordem faz parte do algoritmo.'},
+    {id:'intro-3', tipo:'mcq', pergunta:'Qual característica é importante para um bom algoritmo?',
+      opcoes:['Ter passos confusos e fora de ordem','Ter início, fim e passos claros, sem ambiguidade','Ser o mais longo possível','Não precisar ser seguido em uma ordem específica'],
+      correta:1, explicacao:'Um bom algoritmo tem começo e fim definidos, e cada passo é claro o suficiente para que qualquer pessoa (ou computador) chegue ao mesmo resultado seguindo-o.'}
+  ]
+},
+{
+  id:'fluxo', numero:2, titulo:'Pensamento computacional e fluxogramas',
+  resumo:'Como quebrar um problema grande em passos pequenos — e desenhá-los.',
+  conteudo:[
+    {tipo:'texto', texto:'Problemas grandes assustam. A saída é quebrá-los em partes menores e mais simples de resolver — isso se chama decomposição, e é o primeiro passo do pensamento computacional: a forma como programadores organizam a cabeça antes de escrever qualquer linha de código.'},
+    {tipo:'texto', texto:'Uma das ferramentas mais úteis para planejar um algoritmo antes de programar é o fluxograma: um desenho que representa cada passo com uma forma geométrica diferente. Óvalos marcam o início e o fim, retângulos marcam uma ação, losangos marcam uma decisão (uma pergunta com resposta sim ou não), e paralelogramos marcam entrada ou saída de dados.'},
+    {tipo:'fluxograma'},
+    {tipo:'texto', texto:'O fluxograma acima resolve um problema simples: descobrir se um número é par ou ímpar. Ele lê um número, faz uma pergunta de decisão (o resto da divisão desse número por 2 é igual a zero?) e segue por um caminho ou outro dependendo da resposta. Mais pra frente você vai ver essa mesma lógica virar poucas linhas de código Python.'}
+  ],
+  exercicios:[
+    {id:'fluxo-1', tipo:'mcq', pergunta:'Em um fluxograma, qual símbolo é usado para representar uma decisão (uma pergunta do tipo sim ou não)?',
+      opcoes:['Oval','Retângulo','Losango (diamante)','Círculo pontilhado'],
+      correta:2, explicacao:'O losango é o símbolo padrão de decisão em um fluxograma — dele saem sempre dois caminhos possíveis, um para cada resposta.'},
+    {id:'fluxo-2', tipo:'mcq', pergunta:'De acordo com o fluxograma do módulo, se o número lido for 7, qual vai ser o resultado?',
+      opcoes:['É par','É ímpar','Erro','Nenhum dos dois'],
+      correta:1, explicacao:'7 dividido por 2 tem resto 1 (não é 0), então a resposta da decisão é "não" — e o caminho leva até a caixa "É ímpar".'},
+    {id:'fluxo-3', tipo:'mcq', pergunta:'Qual costuma ser o primeiro passo antes de pensar no algoritmo para resolver um problema grande?',
+      opcoes:['Escrever código em Python direto','Quebrar o problema em partes menores e mais simples','Desistir e tentar outro problema','Pular direto para a solução final'],
+      correta:1, explicacao:'Decompor o problema em partes menores é o que torna possível pensar em um algoritmo claro — é muito mais fácil resolver vários problemas pequenos do que um gigante de uma vez.'}
+  ]
+},
+{
+  id:'var', numero:3, titulo:'Variáveis e tipos de dados',
+  resumo:'As caixinhas que guardam os valores que seu programa usa.',
+  conteudo:[
+    {tipo:'texto', texto:'Uma variável é como uma caixinha com um nome, que guarda um valor — e esse valor pode mudar ao longo do programa (por isso o nome "variável"). Em Python, criar uma variável é simples: você escreve o nome dela, um sinal de igual, e o valor.'},
+    {tipo:'codigo', codigo:'idade = 15\nnome = "Ester"\naltura = 1.65\ngosta_de_matematica = True'},
+    {tipo:'texto', texto:'Repare que cada variável acima guarda um tipo diferente de valor: idade é um número inteiro (int), altura é um número decimal (float), nome é um texto — chamado de string, entre aspas — e gosta_de_matematica é um booleano, que só pode valer True (verdadeiro) ou False (falso). Diferente de outras linguagens, o Python descobre o tipo sozinho: você não precisa avisar.'},
+    {tipo:'dica', texto:'Nomes de variáveis em Python não podem começar com número nem ter espaços — use underline (_) no lugar do espaço, como idade_do_aluno. Maiúsculas e minúsculas fazem diferença: Nome e nome são duas variáveis diferentes.'}
+  ],
+  exercicios:[
+    {id:'var-1', tipo:'mcq', pergunta:'Qual é o tipo de dado do valor 3.14 em Python?',
+      opcoes:['Número inteiro (int)','Número decimal (float)','Texto (string)','Booleano'],
+      correta:1, explicacao:'Qualquer número com casas decimais, como 3.14, é do tipo float em Python.'},
+    {id:'var-2', tipo:'mcq', pergunta:'Depois desse código rodar, qual é o valor final de x?', codigo:'x = 5\nx = x + 3',
+      opcoes:['5','3','8','x+3'], opcoesCodigo:true,
+      correta:2, explicacao:'Na segunda linha, o Python calcula x + 3 usando o valor atual de x (5), chegando a 8, e guarda esse novo valor em x — substituindo o 5 anterior.'},
+    {id:'var-3', tipo:'mcq', pergunta:'Qual dessas opções é um nome de variável válido em Python?',
+      opcoes:['2idade','minha idade','idade_do_aluno','idade-do-aluno'], opcoesCodigo:true,
+      correta:2, explicacao:'Nomes de variável não podem começar com número (2idade), não podem ter espaço (minha idade) e o hífen é interpretado como subtração (idade-do-aluno). O underline resolve isso: idade_do_aluno.'}
+  ]
+},
+{
+  id:'io', numero:4, titulo:'Entrada e saída',
+  resumo:'Como um programa conversa com quem está usando ele.',
+  conteudo:[
+    {tipo:'texto', texto:'Um programa raramente funciona sozinho — ele costuma receber informações de quem está usando (entrada) e devolver algum resultado (saída). Em Python, a saída mais comum é a função print(), que mostra algo na tela.'},
+    {tipo:'codigo', codigo:'print("Olá, mundo!")\nnome = "Ester"\nprint("Olá,", nome)'},
+    {tipo:'texto', texto:'Quando você separa os itens dentro do print() por vírgula, o Python junta tudo numa linha só, colocando um espaço entre cada parte automaticamente.'},
+    {tipo:'texto', texto:'Para receber uma informação de quem está usando o programa, existe a função input(). Ela mostra uma pergunta na tela e espera a pessoa digitar uma resposta.'},
+    {tipo:'codigo', codigo:'nome = input("Qual é o seu nome? ")\nprint("Que bom te conhecer,", nome)'},
+    {tipo:'dica', texto:'Atenção: o input() sempre devolve o que foi digitado como texto (string) — mesmo que a pessoa digite um número! Se você precisar usar esse valor numa conta, converta com int() (número inteiro) ou float() (número decimal), assim: idade = int(input("Sua idade: ")).'}
+  ],
+  exercicios:[
+    {id:'io-1', tipo:'mcq', pergunta:'O que essa segunda parte do código imprime na tela?', codigo:'nome = "Ester"\nprint("Olá,", nome)',
+      opcoes:['Olá, Ester','Olá,Ester','Olá Ester,','Erro'], opcoesCodigo:true,
+      correta:0, explicacao:'O print() junta os dois argumentos com um espaço entre eles automaticamente, então "Olá," + espaço + "Ester" vira "Olá, Ester".'},
+    {id:'io-2', tipo:'mcq', pergunta:'A função input() sempre retorna um valor do tipo:',
+      opcoes:['Número inteiro','Número decimal','Texto (string)','Booleano'],
+      correta:2, explicacao:'Não importa o que a pessoa digite, input() sempre devolve uma string. Se você precisar de um número, tem que converter manualmente com int() ou float().'},
+    {id:'io-3', tipo:'mcq', pergunta:'Você quer pedir a idade da pessoa e já guardar como número inteiro, para poder fazer contas depois. Qual linha faz isso corretamente?',
+      opcoes:["idade = input('Idade: ')","idade = int(input('Idade: '))","idade = input(int('Idade: '))","int(idade) = input('Idade: ')"], opcoesCodigo:true,
+      correta:1, explicacao:'Primeiro o input() pega o texto digitado, depois o int() por fora converte esse texto para número inteiro, e só então o resultado é guardado em idade.'}
+  ]
+},
+{
+  id:'op', numero:5, titulo:'Operadores',
+  resumo:'Os símbolos que fazem contas e comparações dentro do código.',
+  conteudo:[
+    {tipo:'texto', texto:'Operadores são os símbolos que permitem fazer cálculos e comparações dentro de um programa. Os operadores aritméticos fazem contas: + soma, - subtrai, * multiplica, / divide, ** eleva a potência. Existem dois operadores de divisão um pouco menos óbvios: // devolve só a parte inteira da divisão, e % (módulo) devolve o resto da divisão.'},
+    {tipo:'codigo', codigo:'print(17 // 5)\nprint(17 % 5)\nprint(2 ** 3)', legenda:'17 // 5 vale 3 (a parte inteira de 3.4) · 17 % 5 vale 2 (o resto) · 2 ** 3 vale 8'},
+    {tipo:'texto', texto:'Os operadores de comparação respondem perguntas do tipo verdadeiro ou falso: == pergunta se dois valores são iguais (repare, são dois sinais de igual — um sinal só é usado para atribuir valor a uma variável), != pergunta se são diferentes, e > < >= <= comparam qual é maior ou menor.'},
+    {tipo:'texto', texto:'Já os operadores lógicos combinam mais de uma comparação: and (e) só é verdadeiro se as duas partes forem verdadeiras; or (ou) é verdadeiro se pelo menos uma parte for verdadeira; not (não) inverte o resultado.'},
+    {tipo:'codigo', codigo:'idade = 15\nprint(idade >= 12 and idade <= 17)'}
+  ],
+  exercicios:[
+    {id:'op-1', tipo:'mcq', pergunta:'Qual é o resultado de 17 // 5 em Python?',
+      opcoes:['2','3','3.4','5'], opcoesCodigo:true,
+      correta:1, explicacao:'17 dividido por 5 dá 3.4 — e // fica só com a parte inteira dessa divisão, descartando as casas decimais: 3.'},
+    {id:'op-2', tipo:'mcq', pergunta:'Qual é o resultado de 17 % 5 em Python?',
+      opcoes:['0','1','2','5'], opcoesCodigo:true,
+      correta:2, explicacao:'5 cabe 3 vezes dentro de 17 (5×3=15), sobrando 2. O operador % devolve exatamente esse resto: 2.'},
+    {id:'op-3', tipo:'mcq', pergunta:'Qual é o resultado de: 5 > 3 and 10 < 2',
+      opcoes:['True','False','Erro de sintaxe','10'], opcoesCodigo:true,
+      correta:1, explicacao:'5 > 3 é True, mas 10 < 2 é False. Como and só é verdadeiro quando as duas partes são verdadeiras, o resultado final é False.'}
+  ]
+},
+{
+  id:'cond', numero:6, titulo:'Estruturas condicionais',
+  resumo:'Como fazer o programa escolher um caminho diferente.',
+  conteudo:[
+    {tipo:'texto', texto:'Até agora, seus programas seguiam sempre o mesmo caminho, de cima para baixo. As estruturas condicionais permitem que o programa escolha um caminho diferente dependendo de uma condição — exatamente como o losango de decisão do fluxograma que você viu antes.'},
+    {tipo:'codigo', codigo:'idade = 16\nif idade >= 18:\n    print("Maior de idade")\nelif idade >= 16:\n    print("Pode votar, mas não dirigir")\nelse:\n    print("Nenhum dos dois ainda")'},
+    {tipo:'texto', texto:'O Python testa as condições na ordem: primeiro o if, depois cada elif, até achar uma que seja verdadeira — e executa só o bloco correspondente. Se nenhuma condição for verdadeira, ele executa o else (que é opcional). Repare em dois detalhes de sintaxe: toda linha de if, elif e else termina com dois-pontos (:), e a linha seguinte precisa estar indentada — é assim que o Python sabe o que pertence a cada bloco.'},
+    {tipo:'dica', texto:'Um erro comum de iniciante é confundir = (atribuir um valor) com == (comparar dois valores). if idade = 18: dá erro — o certo é if idade == 18:.'}
+  ],
+  exercicios:[
+    {id:'cond-1', tipo:'mcq', pergunta:'Esse código roda com idade = 16. Qual mensagem aparece na tela?', codigo:'idade = 16\nif idade >= 18:\n    print("Maior de idade")\nelif idade >= 16:\n    print("Pode votar, mas não dirigir")\nelse:\n    print("Nenhum dos dois ainda")',
+      opcoes:['Maior de idade','Pode votar, mas não dirigir','Nenhum dos dois ainda','Erro de execução'],
+      correta:1, explicacao:'16 >= 18 é falso, então o if não roda. O elif seguinte, 16 >= 16, é verdadeiro — então essa é a única mensagem impressa.'},
+    {id:'cond-2', tipo:'mcq', pergunta:'Você quer verificar se um número é negativo. Qual condição está escrita corretamente?',
+      opcoes:['if numero < 0:','if numero = 0:','if numero < 0','se numero < 0:'], opcoesCodigo:true,
+      correta:0, explicacao:'A comparação certa usa < 0 (menor que zero) e termina com dois-pontos. As outras opções usam = no lugar de <, esquecem os dois-pontos, ou usam "se" em vez de "if" (Python é em inglês).'},
+    {id:'cond-3', tipo:'mcq', pergunta:'O que está incorreto neste trecho de código?', codigo:'if idade >= 18\n    print("Maior de idade")',
+      opcoes:['Nada, está correto','Falta o dois-pontos (:) no final da linha do if','A variável idade não existe em lugar nenhum','print precisa de aspas simples, não duplas'],
+      correta:1, explicacao:'Toda linha de if precisa terminar com dois-pontos antes do bloco indentado que vem a seguir. Sem ele, o Python não entende onde o bloco começa.'}
+  ]
+},
+{
+  id:'loop', numero:7, titulo:'Estruturas de repetição',
+  resumo:'Como repetir uma tarefa sem copiar e colar a mesma linha.',
+  conteudo:[
+    {tipo:'texto', texto:'Repetir uma tarefa várias vezes é um dos motivos pelos quais usamos computadores. As estruturas de repetição (ou loops) executam um bloco de código repetidas vezes, sem que você precise copiar e colar a mesma linha.'},
+    {tipo:'texto', texto:'O for repete um número definido de vezes, geralmente percorrendo uma sequência criada com range().'},
+    {tipo:'codigo', codigo:'for i in range(1, 5):\n    print(i)', legenda:'imprime 1, 2, 3 e 4 — o número final do range nunca entra na sequência'},
+    {tipo:'texto', texto:'Já o while repete enquanto uma condição continuar verdadeira — é ideal quando você não sabe, de antemão, quantas vezes vai repetir.'},
+    {tipo:'codigo', codigo:'contador = 1\nwhile contador <= 5:\n    print(contador)\n    contador = contador + 1'},
+    {tipo:'dica', texto:'Cuidado: se a condição do while nunca deixar de ser verdadeira, o programa entra num loop infinito e trava. É por isso que, dentro do while acima, a linha contador = contador + 1 é essencial — sem ela, contador nunca mudaria.'}
+  ],
+  exercicios:[
+    {id:'loop-1', tipo:'mcq', pergunta:'Quantos números esse código imprime?', codigo:'for i in range(1, 5):\n    print(i)',
+      opcoes:['3','4','5','1'], opcoesCodigo:true,
+      correta:1, explicacao:'range(1, 5) gera 1, 2, 3 e 4 — quatro números no total. O 5 nunca é incluído, porque o número final do range() é sempre excluído.'},
+    {id:'loop-2', tipo:'mcq', pergunta:'O que há de errado nesse código?', codigo:'x = 1\nwhile x > 0:\n    print(x)\n    x = x + 1',
+      opcoes:['Nada, está correto','x nunca deixa de ser maior que 0 — é um loop infinito','Falta um print dentro do while','O for deveria ser usado no lugar do while'],
+      correta:1, explicacao:'x começa em 1 e só aumenta a cada volta, então x > 0 é sempre verdade — o loop nunca vai parar sozinho.'},
+    {id:'loop-3', tipo:'mcq', pergunta:'Você quer imprimir os números de 1 a 10. Qual opção completa corretamente "for i in ___:"?',
+      opcoes:['range(1, 10)','range(1, 11)','range(0, 10)','range(10)'], opcoesCodigo:true,
+      correta:1, explicacao:'Para incluir o 10, o segundo número do range() precisa ser 11, já que o range sempre para uma unidade antes do número final.'}
+  ]
+},
+{
+  id:'lista', numero:8, titulo:'Listas',
+  resumo:'Como guardar vários valores organizados numa única variável.',
+  conteudo:[
+    {tipo:'texto', texto:'Até agora, cada variável guardava um único valor. Uma lista guarda vários valores organizados numa única variável, na ordem em que você quiser.'},
+    {tipo:'codigo', codigo:'frutas = ["maçã", "banana", "uva", "manga"]\nprint(frutas[0])\nprint(frutas[2])'},
+    {tipo:'texto', texto:'Cada posição da lista tem um índice — e em Python, como na maioria das linguagens, a contagem começa em 0. Então frutas[0] é "maçã", o primeiro item, e frutas[2] é "uva", o terceiro.'},
+    {tipo:'texto', texto:'Duas ferramentas úteis: len(lista) devolve quantos itens a lista tem, e lista.append(valor) adiciona um item novo no final. Para fazer algo com cada item da lista, um for resolve:'},
+    {tipo:'codigo', codigo:'for fruta in frutas:\n    print("Eu gosto de", fruta)'}
+  ],
+  exercicios:[
+    {id:'lista-1', tipo:'mcq', pergunta:'O que essa segunda linha imprime?', codigo:'frutas = ["maçã", "banana", "uva", "manga"]\nprint(frutas[2])',
+      opcoes:['maçã','banana','uva','manga'], opcoesCodigo:true,
+      correta:2, explicacao:'A contagem começa em 0: frutas[0] é "maçã", frutas[1] é "banana", frutas[2] é "uva" — o terceiro item da lista.'},
+    {id:'lista-2', tipo:'mcq', pergunta:'Quantos itens tem a lista frutas = ["maçã", "banana", "uva", "manga"]?',
+      opcoes:['3','4','5','2'], opcoesCodigo:true,
+      correta:1, explicacao:'A lista tem quatro itens: maçã, banana, uva e manga. len(frutas) devolveria 4.'},
+    {id:'lista-3', tipo:'mcq', pergunta:"Qual comando adiciona 'pera' ao final da lista frutas?",
+      opcoes:["frutas.append('pera')","frutas.add('pera')","frutas + 'pera'","frutas[4] = 'pera'"], opcoesCodigo:true,
+      correta:0, explicacao:'append() é o método usado para acrescentar um item ao final de uma lista em Python.'}
+  ]
+},
+{
+  id:'func', numero:9, titulo:'Funções',
+  resumo:'Blocos de código reutilizáveis, com nome e memória própria.',
+  conteudo:[
+    {tipo:'texto', texto:'Uma função é um bloco de código com nome, que você pode "chamar" quantas vezes quiser, de qualquer lugar do programa, sem reescrever a mesma lógica toda vez. Ela pode receber valores de entrada (parâmetros) e devolver um resultado com return.'},
+    {tipo:'codigo', codigo:'def dobro(numero):\n    return numero * 2\n\nresultado = dobro(5)\nprint(resultado)'},
+    {tipo:'texto', texto:'dobro é o nome da função, numero é o parâmetro (o valor que ela recebe) e return numero * 2 devolve o resultado de volta para quem chamou a função — nesse caso, para a variável resultado.'},
+    {tipo:'dica', texto:'print() e return fazem coisas diferentes: print() só mostra um valor na tela, ele não guarda nada. return devolve um valor para ser usado no resto do programa — guardado numa variável, por exemplo.'}
+  ],
+  exercicios:[
+    {id:'func-1', tipo:'mcq', pergunta:"Qual é o valor de 'resultado' depois desse código rodar?", codigo:'def dobro(numero):\n    return numero * 2\n\nresultado = dobro(5)',
+      opcoes:['5','10','25','Erro'], opcoesCodigo:true,
+      correta:1, explicacao:'dobro(5) executa numero * 2 com numero valendo 5, ou seja, 5 * 2 = 10 — e esse é o valor devolvido para resultado.'},
+    {id:'func-2', tipo:'mcq', pergunta:'Para que serve a palavra return dentro de uma função?',
+      opcoes:['Para imprimir um valor na tela','Para devolver um valor para quem chamou a função','Para criar uma variável global','Para parar o programa imediatamente'],
+      correta:1, explicacao:'return encerra a função e devolve um valor para o lugar de onde ela foi chamada, permitindo usar esse resultado no resto do código.'},
+    {id:'func-3', tipo:'mcq', pergunta:'Complete a função para que ela receba um número n e devolva o triplo dele: def triplo(n): ___',
+      opcoes:['print(n * 3)','return n * 3','n = n * 3','triplo = n * 3'], opcoesCodigo:true,
+      correta:1, explicacao:'Para a função devolver o triplo (e não só mostrar na tela), a linha precisa ser return n * 3.'}
+  ]
+},
+{
+  id:'busca', numero:10, titulo:'Busca e ordenação',
+  resumo:'As estratégias por trás de procurar e organizar dados.',
+  conteudo:[
+    {tipo:'texto', texto:'Duas tarefas aparecem o tempo todo em algoritmos: procurar um item dentro de uma lista (busca) e organizar uma lista em ordem (ordenação). Parecem simples, mas por trás existem estratégias — algoritmos — bem definidas.'},
+    {tipo:'texto', texto:'A busca sequencial (ou linear) é a mais simples: começa no primeiro item da lista e vai comparando um por um, na ordem, até achar o valor procurado ou chegar ao fim da lista.'},
+    {tipo:'texto', texto:'Ordenar uma lista significa reorganizar seus itens, normalmente do menor para o maior. Um dos algoritmos de ordenação mais simples de entender é o bubble sort (ordenação por bolha): ele compara elementos vizinhos, dois a dois, e troca de lugar sempre que o da esquerda for maior que o da direita — repetindo esse processo várias vezes até que ninguém mais precise trocar de lugar.'},
+    {tipo:'dica', texto:'Esses são só os primeiros passos. Existem algoritmos de busca e ordenação bem mais rápidos, como busca binária e quicksort, que você vai conhecer num próximo módulo, quando já estiver mais confortável com a lógica básica.'}
+  ],
+  exercicios:[
+    {id:'busca-1', tipo:'mcq', pergunta:'Como funciona a busca sequencial (linear) numa lista?',
+      opcoes:['Ela olha só o primeiro e o último item','Ela percorre item por item, na ordem, até achar o que procura ou a lista acabar','Ela divide a lista ao meio repetidamente','Ela ordena a lista antes de procurar'],
+      correta:1, explicacao:'A busca sequencial é a mais simples de todas: vai item por item, na ordem em que aparecem, comparando com o valor procurado.'},
+    {id:'busca-2', tipo:'mcq', pergunta:'Nessa lista, quantas comparações a busca sequencial faz até encontrar o número 16?', codigo:'lista = [4, 8, 15, 16, 23, 42]',
+      opcoes:['2','3','4','6'], opcoesCodigo:true,
+      correta:2, explicacao:'A busca compara 16 com 4 (não), 8 (não), 15 (não) e 16 (achou!) — quatro comparações até encontrar o valor, na quarta posição.'},
+    {id:'busca-3', tipo:'ordenar', pergunta:'Coloque em ordem os passos gerais de um algoritmo de ordenação por trocas (bubble sort):',
+      itens:['Compare dois elementos vizinhos','Se o da esquerda for maior que o da direita, troque os dois de lugar','Avance para o próximo par de vizinhos','Repita o processo até nenhuma troca ser mais necessária'],
+      ordemExibicao:[3,1,0,2],
+      explicacao:'O bubble sort funciona assim: compara um par, troca se estiver fora de ordem, avança para o próximo par, e repete tudo de novo até a lista inteira ficar organizada.'}
+  ]
+},
+{
+  id:'desafio', numero:11, titulo:'Desafio final',
+  resumo:'Hora de juntar tudo o que você aprendeu na trilha.',
+  conteudo:[
+    {tipo:'texto', texto:'Chegou a hora de juntar tudo o que você aprendeu. Antes do quiz final, dá uma olhada nesse programinha — ele usa variável, entrada e saída, operadores e estrutura condicional, tudo junto, para decidir a situação de um aluno a partir da média das notas.'},
+    {tipo:'codigo', codigo:'nota1 = float(input("Primeira nota: "))\nnota2 = float(input("Segunda nota: "))\nmedia = (nota1 + nota2) / 2\n\nif media >= 7:\n    print("Aprovado! Média:", media)\nelif media >= 5:\n    print("Recuperação. Média:", media)\nelse:\n    print("Reprovado. Média:", media)'},
+    {tipo:'texto', texto:'Consegue seguir o caminho que esse código percorre? Ele pede duas notas, calcula a média, e usa if/elif/else para decidir qual mensagem mostrar — a mesma lógica do losango de decisão, só que em Python. Agora é sua vez: responda o quiz final para revisar os principais conceitos da trilha.'}
+  ],
+  exercicios:[
+    {id:'desafio-1', tipo:'mcq', pergunta:'O que é um algoritmo?',
+      opcoes:['Uma linguagem de programação','Uma sequência finita de passos para resolver um problema','Um tipo de computador','Um erro no código'],
+      correta:1, explicacao:'Algoritmo é a ideia central de toda a trilha: uma sequência clara e finita de passos para resolver um problema.'},
+    {id:'desafio-2', tipo:'mcq', pergunta:'Em um fluxograma, qual símbolo representa uma decisão?',
+      opcoes:['Retângulo','Oval','Losango','Seta'],
+      correta:2, explicacao:'O losango marca uma pergunta de sim ou não, de onde saem dois caminhos possíveis.'},
+    {id:'desafio-3', tipo:'mcq', pergunta:'Qual é o tipo de dado do valor True em Python?',
+      opcoes:['int','float','string','booleano'],
+      correta:3, explicacao:'True e False são os dois únicos valores possíveis do tipo booleano.'},
+    {id:'desafio-4', tipo:'mcq', pergunta:'O que a função input() sempre retorna, por padrão?',
+      opcoes:['Um número inteiro','Um texto (string)','Um booleano','Uma lista'],
+      correta:1, explicacao:'input() sempre devolve texto, mesmo que a pessoa digite números — por isso às vezes é preciso converter com int() ou float().'},
+    {id:'desafio-5', tipo:'mcq', pergunta:'Qual estrutura repete um bloco de código enquanto uma condição for verdadeira?',
+      opcoes:['if','for','while','def'], opcoesCodigo:true,
+      correta:2, explicacao:'O while repete enquanto sua condição continuar verdadeira — diferente do for, que repete um número definido de vezes.'},
+    {id:'desafio-6', tipo:'mcq', pergunta:'Numa lista em Python, qual é o índice do primeiro elemento?',
+      opcoes:['1','0','-1','Depende da lista'], opcoesCodigo:true,
+      correta:1, explicacao:'A contagem de índices em Python sempre começa em 0, então o primeiro elemento é lista[0].'},
+    {id:'desafio-7', tipo:'mcq', pergunta:'Para que serve o return numa função?',
+      opcoes:['Para imprimir algo na tela','Para devolver um valor para quem chamou a função','Para deletar a função','Para criar um loop'],
+      correta:1, explicacao:'return devolve um resultado da função para ser usado no resto do programa, sem precisar imprimir nada na tela.'},
+    {id:'desafio-8', tipo:'mcq', pergunta:'O que a busca sequencial faz numa lista?',
+      opcoes:['Divide a lista ao meio repetidamente','Ordena a lista','Percorre item por item até achar o que procura','Soma todos os itens'],
+      correta:2, explicacao:'A busca sequencial percorre a lista item por item, na ordem, até encontrar o valor procurado ou terminar a lista.'}
+  ]
+}
+];
+
+const CHAVE_STORAGE = 'progresso-ester-algoritmos';
+
+/* =======================================================
+   ESTADO
+======================================================= */
+let state = { moduloAtual:'boas-vindas', progresso:{} };
+let interacoes = {};
+let ordenacaoEmAndamento = {};
+let interacoesOrdem = {};
+let confirmandoReset = false;
+
+function totalExercicios(){
+  return MODULES.reduce((soma,m)=>soma+m.exercicios.length,0);
+}
+function totalConcluidos(){
+  return Object.values(state.progresso).filter(Boolean).length;
+}
+function encontrarModulo(id){
+  return MODULES.find(m=>m.id===id);
+}
+function encontrarExercicio(exId){
+  for(const m of MODULES){
+    const ex = m.exercicios.find(e=>e.id===exId);
+    if(ex) return ex;
+  }
+  return null;
+}
+function encontrarPrimeiroModuloPendente(){
+  for(const m of MODULES){
+    const todosResolvidos = m.exercicios.every(ex=>state.progresso[ex.id]);
+    if(!todosResolvidos) return m.id;
+  }
+  return MODULES[MODULES.length-1].id;
+}
+
+/* =======================================================
+   STORAGE
+======================================================= */
+async function carregarProgresso(){
+  try{
+    const resultado = await window.storage.get(CHAVE_STORAGE, false);
+    if(resultado && resultado.value){
+      const dados = JSON.parse(resultado.value);
+      state.progresso = dados.progresso || {};
+      state.moduloAtual = dados.moduloAtual || 'boas-vindas';
+    }
+  }catch(erro){
+    console.error('Não foi possível carregar o progresso salvo:', erro);
+  }
+}
+async function salvarProgresso(){
+  try{
+    await window.storage.set(CHAVE_STORAGE, JSON.stringify({progresso:state.progresso, moduloAtual:state.moduloAtual}), false);
+  }catch(erro){
+    console.error('Não foi possível salvar o progresso:', erro);
+  }
+}
+
+/* =======================================================
+   RENDER: SIDEBAR
+======================================================= */
+function renderizarSidebar(){
+  const lateral = document.getElementById('trilha-lateral');
+  const scrollAnterior = lateral.scrollTop;
+  const concluidos = totalConcluidos();
+  const total = totalExercicios();
+  const pct = Math.round((concluidos/total)*100);
+
+  const itensHtml = MODULES.map(m=>{
+    const feitos = m.exercicios.filter(ex=>state.progresso[ex.id]).length;
+    const completo = feitos === m.exercicios.length;
+    const atual = state.moduloAtual === m.id;
+    let classe = 'trilha-item';
+    if(completo) classe += ' concluido';
+    if(atual) classe += ' atual';
+    const marcador = completo ? '✓' : m.numero;
+    return '<li class="'+classe+'"><span class="trilha-estacao">'+marcador+'</span><button class="trilha-link" data-action="ir-modulo" data-modulo="'+m.id+'">'+t(m.titulo)+'</button></li>';
+  }).join('');
+
+  lateral.innerHTML =
+    '<button class="trilha-titulo" data-action="ir-modulo" data-modulo="boas-vindas">Trilha de Algoritmos</button>'+
+    '<p class="trilha-subtitulo">Feita para a Ester</p>'+
+    '<ul class="trilha-lista">'+itensHtml+'</ul>'+
+    '<div class="progresso-caixa">'+
+      '<p class="progresso-texto">'+concluidos+' de '+total+' exercícios ('+pct+'%)</p>'+
+      '<div class="progresso-barra-fundo"><div class="progresso-barra-preenchimento" style="width:'+pct+'%"></div></div>'+
+      '<div class="rodape-lateral" id="rodape-lateral">'+renderizarRodapeReset()+'</div>'+
+    '</div>';
+
+  lateral.scrollTop = scrollAnterior;
+  const topoProgresso = document.getElementById('topo-mobile-progresso');
+  if(topoProgresso) topoProgresso.textContent = pct+'%';
+}
+function renderizarRodapeReset(){
+  if(!confirmandoReset){
+    return '<button class="botao-reiniciar" data-action="pedir-reset">Reiniciar progresso</button>';
+  }
+  return '<div class="confirmar-reset"><p>Isso apaga todo o progresso salvo. Tem certeza?</p><div class="linha-botoes"><button class="sim" data-action="confirmar-reset">Sim, apagar</button><button data-action="cancelar-reset">Cancelar</button></div></div>';
+}
+
+/* =======================================================
+   RENDER: FLUXOGRAMA
+======================================================= */
+function renderizarFluxograma(){
+  return '<div class="fluxograma" role="img" aria-label="Fluxograma mostrando como decidir se um número é par ou ímpar">'+
+    '<div class="fc-caixa fc-oval">Início</div>'+
+    '<div class="fc-seta"></div>'+
+    '<div class="fc-caixa fc-entrada">Ler um número</div>'+
+    '<div class="fc-seta"></div>'+
+    '<div class="fc-losango"><span>número % 2 == 0?</span></div>'+
+    '<div class="fc-ramos">'+
+      '<div class="fc-ramo"><p class="fc-rotulo-ramo">sim</p><div class="fc-seta"></div><div class="fc-caixa fc-processo">É par</div></div>'+
+      '<div class="fc-ramo"><p class="fc-rotulo-ramo">não</p><div class="fc-seta"></div><div class="fc-caixa fc-processo">É ímpar</div></div>'+
+    '</div>'+
+    '<div class="fc-seta"></div>'+
+    '<div class="fc-caixa fc-oval">Fim</div>'+
+  '</div>';
+}
+
+/* =======================================================
+   RENDER: BLOCOS DE CONTEÚDO
+======================================================= */
+function renderizarBlocoConteudo(bloco){
+  if(bloco.tipo==='texto'){
+    return '<p class="texto-licao">'+t(bloco.texto)+'</p>';
+  }
+  if(bloco.tipo==='dica'){
+    return '<div class="dica"><p class="dica-rotulo">Dica</p><p>'+t(bloco.texto)+'</p></div>';
+  }
+  if(bloco.tipo==='codigo'){
+    const legenda = bloco.legenda ? '<p class="legenda">'+t(bloco.legenda)+'</p>' : '';
+    return '<div class="painel-codigo">'+legenda+'<pre><code>'+destacarPython(t(bloco.codigo))+'</code></pre></div>';
+  }
+  if(bloco.tipo==='fluxograma'){
+    return renderizarFluxograma();
+  }
+  return '';
+}
+
+/* =======================================================
+   RENDER: EXERCÍCIOS
+======================================================= */
+function renderizarExercicio(ex, indice){
+  if(ex.tipo==='mcq') return renderizarMcq(ex, indice);
+  if(ex.tipo==='ordenar') return renderizarOrdenar(ex, indice);
+  return '';
+}
+
+function renderizarMcq(ex, indice){
+  const resolvido = !!state.progresso[ex.id];
+  const interacao = interacoes[ex.id];
+  const codigoHtml = ex.codigo ? '<div class="painel-codigo"><pre><code>'+destacarPython(t(ex.codigo))+'</code></pre></div>' : '';
+
+  const opcoesHtml = ex.opcoes.map((op,i)=>{
+    let classe = 'opcao';
+    if(resolvido && i===ex.correta){ classe += ' correta-marcada'; }
+    else if(!resolvido && interacao){
+      if(i===interacao.selecionada && i===ex.correta) classe += ' correta-marcada';
+      else if(i===interacao.selecionada && i!==ex.correta) classe += ' incorreta-marcada';
+    }
+    const desabilitado = resolvido ? 'disabled' : '';
+    const conteudo = ex.opcoesCodigo ? '<code>'+t(op)+'</code>' : t(op);
+    return '<button class="'+classe+'" '+desabilitado+' data-action="responder-mcq" data-ex="'+ex.id+'" data-op="'+i+'">'+conteudo+'</button>';
+  }).join('');
+
+  let feedbackHtml = '';
+  const mostrarFeedback = resolvido || interacao;
+  if(mostrarFeedback){
+    const acertou = resolvido || (interacao && interacao.correta);
+    feedbackHtml = '<div class="feedback '+(acertou?'ok':'nao')+'"><p class="feedback-titulo">'+(acertou?'Isso aí!':'Quase lá')+'</p><p>'+t(ex.explicacao)+'</p></div>';
+  }
+
+  return '<div class="exercicio '+(resolvido?'resolvido':'')+'" id="ex-'+ex.id+'">'+
+    '<p class="exercicio-rotulo">Exercício '+(indice+1)+'</p>'+
+    '<p class="exercicio-pergunta">'+t(ex.pergunta)+'</p>'+
+    codigoHtml+
+    '<div class="exercicio-opcoes">'+opcoesHtml+'</div>'+
+    feedbackHtml+
+  '</div>';
+}
+
+function renderizarOrdenar(ex, indice){
+  const resolvido = !!state.progresso[ex.id];
+  const escolhidos = ordenacaoEmAndamento[ex.id] || [];
+  const disponiveis = (ex.ordemExibicao||ex.itens.map((_,i)=>i)).filter(i=>!escolhidos.includes(i));
+  const verificado = interacoesOrdem[ex.id];
+
+  const chipsEscolhidosHtml = escolhidos.map((origIdx,pos)=>{
+    return '<span class="chip"><span class="num">'+(pos+1)+'</span>'+t(ex.itens[origIdx])+'</span>';
+  }).join('');
+
+  const chipsDisponiveisHtml = disponiveis.map(origIdx=>{
+    const desabilitado = resolvido ? 'disabled' : '';
+    return '<button class="chip" '+desabilitado+' data-action="adicionar-item-ordem" data-ex="'+ex.id+'" data-item="'+origIdx+'">'+t(ex.itens[origIdx])+'</button>';
+  }).join('');
+
+  const podeVerificar = escolhidos.length === ex.itens.length && !resolvido;
+
+  let feedbackHtml = '';
+  if(resolvido || (verificado && verificado.verificado)){
+    const acertou = resolvido || verificado.correta;
+    feedbackHtml = '<div class="feedback '+(acertou?'ok':'nao')+'"><p class="feedback-titulo">'+(acertou?'Isso aí!':'Quase lá')+'</p><p>'+t(ex.explicacao)+'</p></div>';
+  }
+
+  return '<div class="exercicio '+(resolvido?'resolvido':'')+'" id="ex-'+ex.id+'">'+
+    '<p class="exercicio-rotulo">Exercício '+(indice+1)+'</p>'+
+    '<p class="exercicio-pergunta">'+t(ex.pergunta)+'</p>'+
+    '<p class="rotulo-chips">Sua ordem:</p>'+
+    '<div class="chips chips-escolhidos">'+(chipsEscolhidosHtml||'<span class="rotulo-chips">(clique nos itens abaixo para adicionar)</span>')+'</div>'+
+    '<p class="rotulo-chips">Itens disponíveis:</p>'+
+    '<div class="chips">'+chipsDisponiveisHtml+'</div>'+
+    '<div class="exercicio-acoes">'+
+      '<button class="botao principal" '+(podeVerificar?'':'disabled')+' data-action="verificar-ordem" data-ex="'+ex.id+'">Conferir ordem</button>'+
+      '<button class="botao" data-action="resetar-ordem" data-ex="'+ex.id+'">Recomeçar</button>'+
+    '</div>'+
+    feedbackHtml+
+  '</div>';
+}
+
+/* =======================================================
+   RENDER: TELA DE BOAS-VINDAS
+======================================================= */
+function renderizarBoasVindas(){
+  const concluidos = totalConcluidos();
+  const total = totalExercicios();
+  const temProgresso = concluidos > 0;
+  const tudoCompleto = concluidos >= total;
+  const alvo = temProgresso ? encontrarPrimeiroModuloPendente() : 'intro';
+
+  let selo = '';
+  if(tudoCompleto){
+    selo = '<div class="selo-completo"><p class="feedback-titulo">Você completou a trilha inteira!</p><p>Todos os '+total+' exercícios, do primeiro ao último. Sinta-se livre para revisitar qualquer módulo sempre que quiser praticar de novo.</p></div>';
+  }
+
+  return '<section class="tela-boas-vindas">'+
+    '<p class="rotulo-modulo">Trilha de Algoritmos</p>'+
+    '<h1>Oi, Ester! Vamos entender como um computador pensa, passo a passo?</h1>'+
+    '<p class="resumo-licao">Essa trilha tem 11 módulos, do que é um algoritmo até busca e ordenação, misturando a lógica por trás de cada ideia com código Python de verdade. Cada módulo termina com exercícios curtos — responda no seu ritmo, tente de novo quando errar, e seu progresso fica salvo automaticamente.</p>'+
+    selo+
+    '<button class="botao principal" data-action="ir-modulo" data-modulo="'+alvo+'">'+(temProgresso?'Continuar de onde parei':'Começar a trilha')+'</button>'+
+  '</section>';
+}
+
+/* =======================================================
+   RENDER: MÓDULO
+======================================================= */
+function renderizarModulo(m){
+  const indiceAtual = MODULES.findIndex(x=>x.id===m.id);
+  const anterior = indiceAtual>0 ? MODULES[indiceAtual-1] : null;
+  const proximo = indiceAtual<MODULES.length-1 ? MODULES[indiceAtual+1] : null;
+
+  const conteudoHtml = m.conteudo.map(renderizarBlocoConteudo).join('');
+  const exerciciosHtml = m.exercicios.map((ex,i)=>renderizarExercicio(ex,i)).join('');
+
+  const navHtml = '<div class="navegacao-licao">'+
+    (anterior ? '<button class="botao" data-action="ir-modulo" data-modulo="'+anterior.id+'">← '+t(anterior.titulo)+'</button>' : '<span></span>')+
+    (proximo ? '<button class="botao principal" data-action="ir-modulo" data-modulo="'+proximo.id+'">Próxima lição: '+t(proximo.titulo)+' →</button>' : '<button class="botao principal" data-action="ir-modulo" data-modulo="boas-vindas">Voltar ao início</button>')+
+  '</div>';
+
+  return '<article>'+
+    '<header class="cabecalho-licao">'+
+      '<p class="rotulo-modulo">Módulo '+m.numero+' de '+MODULES.length+'</p>'+
+      '<h1>'+t(m.titulo)+'</h1>'+
+      '<p class="resumo-licao">'+t(m.resumo)+'</p>'+
+    '</header>'+
+    '<div class="medida-leitura">'+conteudoHtml+'</div>'+
+    '<h2 class="titulo-secao-exercicios">Bora praticar</h2>'+
+    '<p class="subtitulo-secao-exercicios">'+m.exercicios.length+' exercícios sobre esse módulo.</p>'+
+    exerciciosHtml+
+    navHtml+
+  '</article>';
+}
+
+/* =======================================================
+   RENDER: CONTEÚDO PRINCIPAL
+======================================================= */
+function renderizarConteudo(){
+  const principal = document.getElementById('conteudo-principal');
+  if(state.moduloAtual === 'boas-vindas'){
+    principal.innerHTML = renderizarBoasVindas();
+  }else{
+    const m = encontrarModulo(state.moduloAtual);
+    if(!m){ principal.innerHTML = renderizarBoasVindas(); }
+    else{ principal.innerHTML = renderizarModulo(m); }
+  }
+}
+
+function renderizarApp(){
+  renderizarSidebar();
+  renderizarConteudo();
+}
+
+/* =======================================================
+   AÇÕES
+======================================================= */
+function irParaModulo(moduloId){
+  state.moduloAtual = moduloId;
+  salvarProgresso();
+  fecharMenuMobile();
+  renderizarConteudo();
+  document.getElementById('conteudo-principal').scrollTop = 0;
+  window.scrollTo(0,0);
+  renderizarSidebar();
+}
+
+function responderMcq(exId, opIndex){
+  const ex = encontrarExercicio(exId);
+  if(!ex || state.progresso[exId]) return;
+  interacoes[exId] = { selecionada:opIndex, correta: opIndex===ex.correta };
+  if(opIndex===ex.correta){
+    state.progresso[exId] = true;
+    salvarProgresso();
+  }
+  atualizarExercicioNoDom(exId);
+  renderizarSidebar();
+}
+
+function adicionarItemOrdem(exId, itemIndex){
+  const ex = encontrarExercicio(exId);
+  if(!ex || state.progresso[exId]) return;
+  if(!ordenacaoEmAndamento[exId]) ordenacaoEmAndamento[exId] = [];
+  if(ordenacaoEmAndamento[exId].includes(itemIndex)) return;
+  ordenacaoEmAndamento[exId].push(itemIndex);
+  atualizarExercicioNoDom(exId);
+}
+
+function verificarOrdem(exId){
+  const ex = encontrarExercicio(exId);
+  if(!ex) return;
+  const atual = ordenacaoEmAndamento[exId] || [];
+  const correta = atual.length===ex.itens.length && atual.every((v,i)=>v===i);
+  interacoesOrdem[exId] = { verificado:true, correta };
+  if(correta){
+    state.progresso[exId] = true;
+    salvarProgresso();
+  }
+  atualizarExercicioNoDom(exId);
+  renderizarSidebar();
+}
+
+function resetarOrdem(exId){
+  ordenacaoEmAndamento[exId] = [];
+  interacoesOrdem[exId] = null;
+  atualizarExercicioNoDom(exId);
+}
+
+function atualizarExercicioNoDom(exId){
+  const ex = encontrarExercicio(exId);
+  const m = MODULES.find(mod=>mod.exercicios.some(e=>e.id===exId));
+  const indice = m.exercicios.findIndex(e=>e.id===exId);
+  const container = document.getElementById('ex-'+exId);
+  if(!container) return;
+  const html = renderizarExercicio(ex, indice);
+  const temp = document.createElement('div');
+  temp.innerHTML = html;
+  container.replaceWith(temp.firstElementChild);
+}
+
+function fecharMenuMobile(){
+  document.getElementById('trilha-lateral').classList.remove('aberta');
+  document.getElementById('sobreposicao').classList.remove('ativa');
+}
+
+/* =======================================================
+   DELEGAÇÃO DE EVENTOS
+======================================================= */
+document.addEventListener('click', function(e){
+  const alvo = e.target.closest('[data-action]');
+  if(!alvo) return;
+  const acao = alvo.dataset.action;
+
+  if(acao==='ir-modulo'){ irParaModulo(alvo.dataset.modulo); }
+  else if(acao==='responder-mcq'){ responderMcq(alvo.dataset.ex, parseInt(alvo.dataset.op,10)); }
+  else if(acao==='adicionar-item-ordem'){ adicionarItemOrdem(alvo.dataset.ex, parseInt(alvo.dataset.item,10)); }
+  else if(acao==='verificar-ordem'){ verificarOrdem(alvo.dataset.ex); }
+  else if(acao==='resetar-ordem'){ resetarOrdem(alvo.dataset.ex); }
+  else if(acao==='pedir-reset'){ confirmandoReset = true; renderizarSidebar(); }
+  else if(acao==='cancelar-reset'){ confirmandoReset = false; renderizarSidebar(); }
+  else if(acao==='confirmar-reset'){ reiniciarProgresso(); }
+});
+
+document.getElementById('botao-menu').addEventListener('click', function(){
+  document.getElementById('trilha-lateral').classList.toggle('aberta');
+  document.getElementById('sobreposicao').classList.toggle('ativa');
+});
+document.getElementById('sobreposicao').addEventListener('click', fecharMenuMobile);
+
+async function reiniciarProgresso(){
+  state.progresso = {};
+  state.moduloAtual = 'boas-vindas';
+  interacoes = {};
+  ordenacaoEmAndamento = {};
+  interacoesOrdem = {};
+  confirmandoReset = false;
+  try{ await window.storage.delete(CHAVE_STORAGE, false); }catch(erro){ console.error(erro); }
+  renderizarApp();
+}
+
+/* =======================================================
+   INÍCIO
+======================================================= */
+async function iniciar(){
+  document.getElementById('conteudo-principal').innerHTML = '<p class="resumo-licao">Carregando sua trilha…</p>';
+  await carregarProgresso();
+  renderizarApp();
+}
+iniciar();
+</script>
+</body>
+</html>
